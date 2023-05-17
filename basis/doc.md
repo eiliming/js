@@ -106,7 +106,7 @@ console.log(
 ```
 
 ### **四、null 与 undefined**
-* 在语意上，undefined 表示未初始化变量，null 表示空对象指针，所以本质上 null 是一个对象（可以在定义一个未知的对象时使用 null 来初始化）。
+* 在语意上，undefined 表示未初始化值的变量，null 表示空对象指针（可以在定义一个未知的对象时使用 null 来初始化）。
 * typeof undefined === "undefined"，typeof null === "object"。
 * Number(undefined) === NaN，Number(null) === 0。
 * 某个变量的值是 undefined 与这个变量未定义是有区别的，未定义的变量只能执行 typeof 操作（或者在条件语句中执行赋值操作，等同于给 window 的某个属性赋值），否则会报错。
@@ -169,7 +169,7 @@ console.log(Number("aa")) //NaN
 
 ### **七、NaN**
 * typeof NaN === "number"。
-* NaN 不与如何数据相等，包括他自身。
+* NaN 不与任何数据相等，包括他自身。
 * NaN 与任何数据进行比较都返回 false。
 * NaN 与任何数据进行计算都返回 NaN。
 * 可以通过 isNaN() 判断一个数据是否是NaN。
@@ -396,3 +396,50 @@ const num = (1,2,5,6) // num === 6
 * for-of 语句是一种严格的迭代语句，用于遍历可迭代对象的元素（可以遍历 Symbol）。
 * for-of 循环会按照可迭代对象的 next() 方法产生的值的顺序迭代元素。
 * for-await-of 可以支持 Promise 的异步可迭代对象。
+
+---
+## **作用域与内存**
+---
+
+### **一、原始值**
+* 原始值包含
+```js
+const str = "string" // String
+const num = 1 //Number
+const boo = true // Boolean
+const nul = null // Null
+const undef = undefined // Undefined
+const sym = Symbol('symbol') // Symbol
+```
+* 使用 new 关键字与原始字面量的区别
+```js
+const str1 = "string";
+const str2 = new String("string");
+
+// 1.两个值不完全相等
+console.log(str1===str2) // false
+console.log(str1==str2) // true
+
+// 2.typeof 的值不同
+console.log(typeof str1) // "string"
+console.log(typeof str2) // "object"
+
+// 3.使用 new 构建的值可以设置动态属性并且读取动态属性
+str1.name = "name";
+str2.name = "name";
+console.log(str1.name) // undefined
+console.log(str2.name) // "name"
+```
+
+### **二、确定值的类型**
+* string number boolean undefined symbol（Symbol()） 的字面量原始值可以直接使用 typeof 判断
+* instanceof 可以判断某个变量是否是某个构造函数的实例。（需要注意所有引用类型都是 Object 的实例）。
+
+### **三、执行上下文与作用域**
+* js 中包含 ***全局作用域***、***函数作用域***、***块级作用域***。
+* 每个作用域都存在一个执行上下文，上下文关联一个 ***变量对象***，在上下文中定义的所有变量和函数都存在于这个对象上。
+* 当代码流进入某个上下文时，该上下文会被推入上下文栈。
+* 上下文中的代码在执行的时候会创建一个 ***变量对象*** 的 ***作用域链***，这个 ***作用域链*** 决定代码在访问变量和函数时查找各个 ***上下文变量对象*** 的顺序。
+* ***作用域链*** 按照上下文栈从当前上下文一直连接到全局上下文。
+* 上下文执行完毕之后会退出上下文栈并销毁该上下文内定义的变量和函数，将控制权返回给上一个上下文（后入先出）。
+* 全局上下文会在关闭网页时退出，所以为了促进内存回收，全局变量可以在不需要时手动销毁（赋值为 null）

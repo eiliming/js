@@ -88,6 +88,7 @@ const fn = () => {};
 const sym = Symbol('sym');
 const nul = null;
 const undef = undefined;
+const nan = NaN;
 
 console.log(
     typeof str === "string",
@@ -99,15 +100,16 @@ console.log(
     typeof nul === "object",
     typeof sym === "symbol",
     typeof fn === "function",
-    typeof undef === "undefined"
+    typeof undef === "undefined",
+    typeof nan === "number"
 )
 ```
 
 ### **四、null 与 undefined**
 * 在语意上，undefined 表示未初始化变量，null 表示空对象指针，所以本质上 null 是一个对象（可以在定义一个未知的对象时使用 null 来初始化）。
 * typeof undefined === "undefined"，typeof null === "object"。
-* Number(undefined) === NAN，Number(null) === 0。
-* 变量的值是 undefined 与变量未定义是有区别的，未定义的变量只能执行 typeof 操作（或者在条件语句中执行赋值操作，等同于给 window 的某个属性赋值），否则会报错。
+* Number(undefined) === NaN，Number(null) === 0。
+* 某个变量的值是 undefined 与这个变量未定义是有区别的，未定义的变量只能执行 typeof 操作（或者在条件语句中执行赋值操作，等同于给 window 的某个属性赋值），否则会报错。
 ```js
 const a;
 
@@ -130,7 +132,7 @@ console.log(d) // d
 console.log(Boolean(false)) //false
 console.log(Boolean('')) //false
 console.log(Boolean(0)) //false
-console.log(Boolean(NAN)) //false
+console.log(Boolean(NaN)) //false
 console.log(Boolean(null)) //false
 console.log(Boolean(undefined)) //false
 ```
@@ -145,46 +147,53 @@ console.log(Number(false)) //0
 
 /** object */
 console.log(Number(null)) //0
-console.log(Number({})) // NAN
+console.log(Number({})) // NaN
 console.log(Number({
     valueOf: ()=>10
 })) //10
 console.log(Number({
-    valueOf: ()=> NAN,
+    valueOf: ()=> NaN,
     toString: ()=> "100"
 })) //100
 
 /** undefined */
-console.log(Number(undefined)) //NAN
+console.log(Number(undefined)) //NaN
 
 /** string */
 console.log(Number("")) //0
 console.log(Number("10")) //10
 console.log(Number("10.1")) //10.1
-console.log(Number("10.1.1")) //NAN
-console.log(Number("aa")) //NAN
+console.log(Number("10.1.1")) //NaN
+console.log(Number("aa")) //NaN
 ```
 
-### **七、parseInt() parseFloat()**
+### **七、NaN**
+* typeof NaN === "number"。
+* NaN 不与如何数据相等，包括他自身。
+* NaN 与任何数据进行比较都返回 false。
+* NaN 与任何数据进行计算都返回 NaN。
+* 可以通过 isNaN() 判断一个数据是否是NaN。
+
+### **八、parseInt() parseFloat()**
 * parseInt() parseFloat() 会将非字符串和数字的数据转换成字符串再进行转换处理。
 * parseInt() 可以传递第二个参数指定转换的进制数。
 ```js
-console.log(parseInt()) //NAN
-console.log(parseInt("")) //NAN
+console.log(parseInt()) //NaN
+console.log(parseInt("")) //NaN
 console.log(parseInt("123.456abc")) //123
 console.log(parseFloat("123.456.789abc")) //123.456
-console.log(parseInt("abc")) //NAN
+console.log(parseInt("abc")) //NaN
 console.log(parseInt({toString:()=>"100"})) //100
 console.log(parseInt("0xA"))// 10（十六进制）
 console.log(parseInt("A"，16))// 10（十六进制）
 ```
 
-### **八、String() toString()**
+### **九、String() toString()**
 * 除了 null 和 undefined，其他所有数据都有 toString 方法。
 * number 数据的 toString 方法可以传递参数指定转换的进制数。
 * String 会默认调用参数的 toString 方法来进行转换，null undefined 会直接转换成 "null" "undefined"。
 
-### **九、摸板字面量标签函数**
+### **十、摸板字面量标签函数**
 ```js
 const strTemp = (strings,...args) => {
     console.log(strings,args);
@@ -198,7 +207,7 @@ console.log(str) //strTemp
 
 ```
 
-### **十、Symbol**
+### **十一、Symbol**
 * Symbol() Symbol.for() Symbol.keyFor()
 ```js
 const symA1 = Symbol.for('a');
@@ -229,9 +238,161 @@ console.log(Object.getOwnPropertySymbols(obj)) // [Symbol(a)]
 console.log(Reflect.ownKeys(obj)) // ["a",Symbol(a)]
 ```
 
-### **十一、Object 实例的属性和方法**
+### **十二、Object 实例的属性和方法**
 * constructor 用于构建当前实例的函数。
 * hasOwnProperty 用于判断当前实例上是否有某个属性（非通过原型继承的属性）。
 * isPrototypeOf 用于判断当前对象是否为另一个对象的原型。
 * propertyIsEnumerable 用于判断某个属性是否可以使用 for-in 枚举。
 * toLocalString toString valueOf
+
+---
+## **操作符**
+---
+
+### **一、递增｜递减**
+```js
+let a = 1; //a === 1;
+let a1 = ++a; //a1 === 2,a===2
+let a2 = a++; //a2 === 2,a===3
+let a3 = --a; //a3 === 2,a===2
+let a4 = a--; //a4 === 2,a===1
+let a5 = ++a+1; //a5 === 3,a===2
+let a6 = 1+a++; //a6 === 3,a===3
+```
+
+### **二、位操作符**
+* 有符号整数使用 32 位的前 31 位表示整数数值（从左往右数），第 32 位表示数值的符号（0 表示 +，1 表示 -）。
+* 正值以真正的二进制格式存储，即31位中的每一位都代表2的幂。第一位表示2^0，第二位表示2^1，依次类推。
+* 负值首先以其正值为基础，然后对正值的每一位进行反码，最后再加上 1
+```js
+// 18 的二进制存储格式
+let num18 = 00000000000000000000000000010010; //等价于 10010 (2^0)*0+(2^1)*1+(2^2)*0+(2^3)*0+(2^4)*1 = 18
+
+// -18 的二进制存储格式
+// 1111 1111 1111 1111 1111 1111 1110 1110
+```
+
+* 按位非（~），返回每位数上的补数。
+```js
+let num1 = 18; //    二进制 0000 0000 0000 0000 0000 0000 0001 0010
+let num2 = ~num1; // 二进制 1111 1111 1111 1111 1111 1111 1110 1101 等价于十进制 -19
+```
+
+* 按位与（&），每一位进行与操作。
+```js
+// 1 & 1 -> 1
+// 1 & 0 -> 0
+// 0 & 0 -> 0
+// 0 & 1 -> 0
+
+let num = 25 & 3;
+// 25 -> 0000 0000 0000 0000 0000 0000 0001 1001
+//  3 -> 0000 0000 0000 0000 0000 0000 0000 0011
+//AND -> 0000 0000 0000 0000 0000 0000 0000 0001 等价于十进制 1
+```
+
+* 按位或（|），每一位进行或操作。
+```js
+// 1 | 1 -> 1
+// 1 | 0 -> 1
+// 0 | 0 -> 0
+// 0 | 1 -> 1
+
+let num = 25 | 3;
+// 25 -> 0000 0000 0000 0000 0000 0000 0001 1001
+//  3 -> 0000 0000 0000 0000 0000 0000 0000 0011
+// OR -> 0000 0000 0000 0000 0000 0000 0001 1011 等价于十进制 27
+```
+
+* 按位异或（^），每一位进行异或操作。
+```js
+// 1 ^ 1 -> 0
+// 1 ^ 0 -> 1
+// 0 ^ 0 -> 0
+// 0 ^ 1 -> 1
+
+let num = 25 ^ 3;
+// 25 -> 0000 0000 0000 0000 0000 0000 0001 1001
+//  3 -> 0000 0000 0000 0000 0000 0000 0000 0011
+//XOR -> 0000 0000 0000 0000 0000 0000 0001 1010 等价于十进制 26
+```
+
+* 左移（<<）,按照指定的位数将值的每一位(不包括符号位)向左移动。
+```js
+let num = 2 << 5;
+//    2 -> 0000 0000 0000 0000 0000 0000 0000 0010
+// << 5 -> 0000 0000 0000 0000 0000 0000 0100 0000 等价于十进制 64
+
+let num2 = -2 << 5; // -64
+```
+
+* 有符号右移动（>>），按照指定的位数将值的每一位(不包括符号位)向右移动。
+```js
+let num = 64 >> 5;
+//   64 -> 0000 0000 0000 0000 0000 0000 0100 0000
+// >> 5 -> 0000 0000 0000 0000 0000 0000 0000 0010 等价于十进制 2
+
+let num2 = -64 >> 5; // -2
+```
+
+* 无符号右移动（>>>），按照指定的位数将值的每一位(包括符号位)向右移动。
+```js
+let num = 64 >>> 5;
+//   64 -> 0000 0000 0000 0000 0000 0000 0100 0000
+//>>> 5 -> 0000 0000 0000 0000 0000 0000 0000 0010 等价于十进制 2
+
+let num2 = -64 >>> 5; 
+//  -64 -> 1111 1111 1111 1111 1111 1111 1100 0000
+//>>> 5 -> 0000 0111 1111 1111 1111 1111 1111 1110  等价于十进制 134217726
+```
+
+### **三、布尔操作符**
+* 逻辑非（!），等同于调用Boolean()函数。
+* 逻辑与（&&），如果第一个值转换为布尔值为false，则直接返回第一个值，否则返回第二个值。
+* 逻辑或（||），如果第一个值转换为布尔值为false，则直接返回第二个值，否则返回第一个值。
+
+### **四、数学计算**
+* NaN 参与任何计算都返回 NaN。
+* Infinity * 0 === NaN。
+* Infinity / Infinity === NaN。
+* 0 / 0 === NaN。
+* Infinity % 任何值 === NaN。
+* Infinity - Infinity === NaN。
+
+### **五、比较操作符**
+* 都是字符串则比较字符编码。
+* 任何一个为数字则将另一个转换为数字比较。
+* 对象调用 valueOf()，如果没有则用 toString()，转换之后比较。
+* 布尔值转换为数字进行比较。
+* 如何与 NaN 的比较都是 false。
+```js
+const boo1 =  NaN < 3 // false
+const boo2 = NaN >= 3 // false
+```
+
+### **六、相等操作符（==，!=）**
+* 任意值为布尔值则将其转化为数值再比较。
+* 字符串与数值比较时会将字符串转化为数值。
+* 一个对象与一个非对象比较时会调用对象的 valueOf() 方法之后再比较。
+* null == undefined。
+* null 和 undefined 不能转化为其他类型的值再进行比较。
+```js
+console.log(null == 0) // false
+console.log(undefined == 0) // false
+```
+
+## **七、逗号操作符**
+```js
+const num = (1,2,5,6) // num === 6 
+```
+
+---
+## **语句**
+---
+### **一、for-in**
+* for-in 语句是一种严格的迭代语句，用于枚举对象中的非符号（非 Symbol ）键属性。
+
+### **二、for-of**
+* for-of 语句是一种严格的迭代语句，用于遍历可迭代对象的元素（可以遍历 Symbol）。
+* for-of 循环会按照可迭代对象的 next() 方法产生的值的顺序迭代元素。
+* for-await-of 可以支持 Promise 的异步可迭代对象。

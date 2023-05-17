@@ -429,6 +429,22 @@ str1.name = "name";
 str2.name = "name";
 console.log(str1.name) // undefined
 console.log(str2.name) // "name"
+
+// 4.使用 new 构建的值在被转会成布尔值时都会被转换成true
+const num1 = 0;
+const num2 = new Number(0);
+
+console.log(Boolean(num1)) // false
+console.log(Boolean(num2)) // true
+
+// 5.字面量值不是构造函数的实例
+console.log(str1 instanceof String) // false
+```
+
+* 在以读模式访问原始值，会临时创建一个实例对象，访问结束后会销毁该实例。原始值用这种方式获得了构造函数的属性和方法。
+```js
+const str = "str";
+str.substring(2)// str 能够获取到 substring 方法是因为这里临时创建了一个 str -> new String("str")，substring 是 新的 str 实例对象上的方法
 ```
 
 ### **二、确定值的类型**
@@ -442,4 +458,63 @@ console.log(str2.name) // "name"
 * 上下文中的代码在执行的时候会创建一个 ***变量对象*** 的 ***作用域链***，这个 ***作用域链*** 决定代码在访问变量和函数时查找各个 ***上下文变量对象*** 的顺序。
 * ***作用域链*** 按照上下文栈从当前上下文一直连接到全局上下文。
 * 上下文执行完毕之后会退出上下文栈并销毁该上下文内定义的变量和函数，将控制权返回给上一个上下文（后入先出）。
-* 全局上下文会在关闭网页时退出，所以为了促进内存回收，全局变量可以在不需要时手动销毁（赋值为 null）
+* 全局上下文会在关闭网页时退出。所以为了促进内存回收，全局变量可以在不需要时手动销毁（赋值为 null）
+
+---
+## **RegExp**
+---
+
+* .test()，测试是否匹配，返回 true | false。
+* .exec()，获取匹配和捕获的数据。
+```js
+const reg = /ab(.{2})cd/g; //表示捕获 ab 和 cd 中间的任意两位字符
+
+const str = "aa ab11cd ab12cd ab123cd abcd";
+
+//第一次匹配
+console.log(reg.exec(str)); // ['ab11cd', '11']  第一项为匹配到字符 第二项为捕获到的字符
+
+//第二次匹配
+console.log(reg.exec(str)); // ['ab12cd', '12']
+
+//第三次匹配
+console.log(reg.exec(str)); // null
+```
+
+---
+## **String**
+---
+* slice(start,end)，当值为负时计算的值为 str.length - 值。
+* substring(start,end)，当值为负时会被当作0。
+* substr(start,length)，当第一个值为负时计算的值为 str.length - 值，第二个值为负会被当作0。
+* trim()，消除所有空格符。
+* match()，等同于 RegExp 的 .exec()。
+* search()，等同于 indexOf()，不过可以传递正则参数。
+* replace()，第一个参数可以是正则，第二个参数可以是一个函数用于处理匹配到的数据怎么替换。
+```js
+function htmlEscape(text){
+    return text.replace(/[<>"$]/g,(match)=>{
+        switch(match){
+            case "<":
+                return "&lt;"
+            case ">":
+                return "&gt;";
+            case "\"":
+                return "&quot;";
+            case "$":
+                return "&ampt;";
+            default:
+                return match
+        }
+    })
+}
+console.log(htmlEscape('<p class="greet">hello!</p>')); //&lt;p class=&quot;greet&quot;&gt;hello!&lt;/p&gt;
+```
+
+---
+## **Global**
+---
+* encodeURI()，对 uri 字符串进行编码（包含://）。
+* encodeURIComponent()，对 uri 字符串进行编码（不包含://）。
+* decodeURI()，encodeURIComponent()，解码。
+* eval()，eval 中可以调用外部的上下文变量，eval 执行后声明的变量（只限于用 var 声明的）和函数可以外部调用。

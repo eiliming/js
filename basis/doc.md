@@ -562,7 +562,12 @@ console.log(arr3); //[1,2]
 ```
 
 * 如果数组中的某一项是 null 或者 undefined，则在 join() toLocalString() toString() valueOf() 返回的结果中会以空字符串表示。
+```js
+const arr = [1,2,null,4,undefined,6];
 
+console.log(arr.toString()); //1,2,,4,,6
+
+```
 * push() + pop() 可以让数组实现栈结构的功能（后进先出）。
 * push() + shift() 可以让数组实现队列结构的功能（后进后出）。
 
@@ -650,7 +655,7 @@ for(let i of counter){
 }
 ```
 
-* 迭代器使用 return() 方法指定在迭代器提前关闭时执行的逻辑（return 不要返回一个有效的 IteratorResult 对象）。
+* 迭代器使用 return() 方法指定在迭代器提前关闭时执行的逻辑（return 需要返回一个有效的 IteratorResult 对象）。
 * for-of 可以通过 break continue return throw 来提前退出迭代。
 * 解构操作未消费所有值时也会触发提前关闭迭代（const [a,b] = [1,2,3]）。
 
@@ -658,7 +663,7 @@ for(let i of counter){
 ## **生成器**
 ---
 * 生成器函数 function * fn () {}
-* 生成器对象：生成器函数执行后得到的对象（实现了 可迭代协议，他们默认的迭代器时自引用的）。
+* 生成器对象：生成器函数执行后得到的对象（实现了可迭代协议，他们默认的迭代器是自引用的）。
 ```js
 function * generatorFn(){
     yield 1
@@ -668,7 +673,7 @@ console.log(generatorFn()); //generatorFn()[Symbol.iterator]()
 console.log(generatorFn()[Symbol.iterator]()); //generatorFn()[Symbol.iterator]()
 
 ```
-* 通过 yield 关键值退出的生成器函数会在 done:false 状态。
+* 通过 yield 关键字退出的生成器函数会在 done:false 状态。
 * 通过 return 关键值退出的生成器函数会在 done:true 状态。
 * yield 关键字必须用在生成器函数内部，不能用在嵌套的非生成器函数内。
 * yield 关键字同时可以用于输入和输出。
@@ -773,7 +778,7 @@ console.log(g.return(0)); // {done:true,value:0}
 console.log(g.next()); // {done:true,value:undefined}
 ```
 
-* throw() 方法会在暂停的时候将一个提供的错误注入到生成器对象中，如果错误没有被处理，生成器就会关闭，如果生成器内部处理了错误，生成器不会被关闭，还可以恢复执行，错误处理会跳过对应的 yield。
+* throw() 方法会在暂停的时候将一个提供的错误注入到生成器对象中，如果错误没有被处理，生成器就会关闭；如果生成器内部处理了错误，生成器不会被关闭，还可以恢复执行，错误处理会跳过对应的 yield。
 ```js
 function * G () {
     for(let n of [1,2,3]){

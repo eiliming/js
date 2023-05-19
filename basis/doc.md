@@ -42,8 +42,9 @@
 
 ### **一、var 与 let const**
 * var 声明的变量是函数级作用域，let const 声明的变量为块级作用域。
-* var 声明的变量在作用域内会有声明“提升”的机制，let const 不会。
+* var 声明的变量在作用域内会有声明“提升”的机制，let const 不会（会有暂时性锁区机制）。
 * var 可以出现冗余声明，let const 在作用域内不允许出现冗余声明。
+* 在 vale 语句中用 var 声明的变量可以在 vale 执行后访问（用 const 和 let 声明的变量无法被访问到）。
 * var 在全局作用域中声明的变量等同于挂载到 window 上的属性，let const 不是。
 ```js
 var name = "lee";
@@ -135,6 +136,11 @@ console.log(Boolean(0)) //false
 console.log(Boolean(NaN)) //false
 console.log(Boolean(null)) //false
 console.log(Boolean(undefined)) //false
+
+//注意
+console.log(new Boolean(false)) //true
+console.log(new Number(0)) //true
+console.log(new String("")) //true
 ```
 
 ### **六、Number()**
@@ -191,7 +197,7 @@ console.log(parseInt("A"，16))// 10（十六进制）
 ### **九、String() toString()**
 * 除了 null 和 undefined，其他所有数据都有 toString 方法。
 * number 数据的 toString 方法可以传递参数指定转换的进制数。
-* String 会默认调用参数的 toString 方法来进行转换，null undefined 会直接转换成 "null" "undefined"。
+* String() 会默认调用参数的 toString() 方法来进行转换，null undefined 会直接转换成 "null" "undefined"。
 
 ### **十、摸板字面量标签函数**
 ```js
@@ -463,7 +469,7 @@ str.substring(2)// str 能够获取到 substring 方法是因为这里临时创�
 ---
 ## **RegExp**
 ---
-
+* [语法文档](https://github.com/ziishaned/learn-regex/blob/master/translations/README-cn.md)
 * .test()，测试是否匹配，返回 true | false。
 * .exec()，获取匹配和捕获的数据。
 ```js
@@ -484,9 +490,9 @@ console.log(reg.exec(str)); // null
 ---
 ## **String**
 ---
-* slice(start,end)，当值为负时计算的值为 str.length - 值。
+* slice(start,end)，当值为负时计算的值为 str.length + 值（负）。
 * substring(start,end)，当值为负时会被当作0。
-* substr(start,length)，当第一个值为负时计算的值为 str.length - 值，第二个值为负会被当作0。
+* substr(start,length)，当第一个值为负时计算的值为 str.length + 值（负），第二个值为负会被当作0。
 * trim()，消除所有空格符。
 * match()，等同于 RegExp 的 .exec()。
 * search()，等同于 indexOf()，不过可以传递正则参数。
@@ -518,3 +524,272 @@ console.log(htmlEscape('<p class="greet">hello!</p>')); //&lt;p class=&quot;gree
 * encodeURIComponent()，对 uri 字符串进行编码（不包含://）。
 * decodeURI()，encodeURIComponent()，解码。
 * eval()，eval 中可以调用外部的上下文变量，eval 执行后声明的变量（只限于用 var 声明的）和函数可以外部调用。
+
+---
+## **Array**
+---
+* 空位项可以被 for-of for-in 遍历到，其值会被视为 undefined，但是 .map() .forEach() .join() 等方法不会访问其值。
+```js
+const arr = [1,,,4,5];
+
+for(let i=0;i<arr.length;i++){
+    console.log(arr[i]); //1 undefined undefined 4 5
+}
+
+for(let n of arr){
+    console.log(n); //1 undefined undefined 4 5
+}
+
+console.log(arr.map(()=>6)); //[6,,,6,6]
+
+arr.forEach(console.log); //1 4 5
+
+```
+
+* 可以通过调整数组 length 或者设定索引值的方式修改数组长度和内容。
+```js
+const arr1 = [1,2,3];
+arr1.length = 4;
+console.log(arr1); //[1,2,3,]
+
+const arr2 = [1,2,3];
+arr2[4]=5;
+console.log(arr2); //[1,2,3,,5]
+
+const arr3 = [1,2,3];
+arr3.length = 2;
+console.log(arr3); //[1,2]
+```
+
+* 如果数组中的某一项是 null 或者 undefined，则在 join() toLocalString() toString() valueOf() 返回的结果中会以空字符串表示。
+
+* push() + pop() 可以让数组实现栈结构的功能（后进先出）。
+* push() + shift() 可以让数组实现队列结构的功能（后进后出）。
+
+---
+## **Map**
+---
+* set()
+* get()
+* has()
+* delete()
+* clear()
+* size
+* entries()，转换为可迭代对象，等同于调用其 [Symbol.iterator]() 函数。
+```js
+const map = new Map([[1,1],[2,2]]);
+console.log(map.entries === map[Symbol.iterator]); //true
+```
+* forEach()
+* keys()
+* values()
+
+---
+## **WeakMap (WeakSet)**
+---
+* WeakMap 的键只能是 Object 或者 Object 的实例。
+* WeakMap 的键称之为弱键，当其引用消失之后则会回收这对键和值。
+* WeakMap 没有迭代能力。
+
+---
+## **Set**
+---
+* add()
+* has()
+* size
+* delete()
+* clear()
+* entries()
+* values()
+* keys()
+
+---
+## **迭代器模式**
+---
+### **可迭代协议**
+* 迭代器是按需创建的一次性对象（至少包含一个用于获取下一个值的 next 函数）。
+* Iterable 接口（可迭代协议）要求具备两种能力：支持迭代的自我识别能力、创建实现迭代器对象的能力。
+* 实现了 Iterable 接口（可迭代协议），并且可以通过迭代器（Iterator）消费的结构称之为 **可迭代对象**
+* 在 js 中 Array Set Map （可迭代对象）默认以 [Symbol.iterator] 为键的值是一个迭代器工厂函数，调用这个函数返回一个新的迭代器。
+* 实现了可迭代协议的所有类型都会自动兼容接收可迭代对象的任何语言特性（for-of 解构 拓展操作符等）。
+
+### **迭代器**
+* 迭代器使用 next() 方法遍历可迭代对象的数据。
+* 每次调用 next() 方法会返回一个 IteratorResult 对象（包含 done 和 value 两个属性，表示迭代是否已经完成和当前迭代的值）。
+```js
+class Counter{
+    constructor(limit){
+        this.limit = limit;
+    }
+
+    // 迭代器工厂函数 默认键必须是 [Symbol.iterator]
+    [Symbol.iterator](){
+        let count = 1;
+        let limit = this.limit;
+        // 返回一个迭代器对象
+        return {
+            next(){
+                if(count<=limit){
+                    return {
+                        done: false,
+                        value: count++
+                    }
+                }
+                return {
+                    done: true,
+                    value: undefined
+                }
+            }
+        }
+    }
+}
+
+const counter = new Counter(5);
+for(let i of counter){
+    console.log(i)// 1 2 3 4 5
+}
+```
+
+* 迭代器使用 return() 方法指定在迭代器提前关闭时执行的逻辑（return 不要返回一个有效的 IteratorResult 对象）。
+* for-of 可以通过 break continue return throw 来提前退出迭代。
+* 解构操作未消费所有值时也会触发提前关闭迭代（const [a,b] = [1,2,3]）。
+
+---
+## **生成器**
+---
+* 生成器函数 function * fn () {}
+* 生成器对象：生成器函数执行后得到的对象（实现了 可迭代协议，他们默认的迭代器时自引用的）。
+```js
+function * generatorFn(){
+    yield 1
+}
+
+console.log(generatorFn()); //generatorFn()[Symbol.iterator]()
+console.log(generatorFn()[Symbol.iterator]()); //generatorFn()[Symbol.iterator]()
+
+```
+* 通过 yield 关键值退出的生成器函数会在 done:false 状态。
+* 通过 return 关键值退出的生成器函数会在 done:true 状态。
+* yield 关键字必须用在生成器函数内部，不能用在嵌套的非生成器函数内。
+* yield 关键字同时可以用于输入和输出。
+```js
+function * gFn(){
+    return yield 'fn'; //代码从右往左 先执行 yield 'fn'，再执行 return yield
+}
+const gObj = gFn();
+
+//第一次 next 传入的值不会生效
+console.log(gObj.next("a")); //fn
+
+//next 传入的值会传递到 yield
+console.log(gObj.next("prop")); // prop
+```
+
+* yield * 可以迭代一个可迭代对象（将一个可迭代对象序列化为一连串可以单独产出的值）。
+```js
+function * fn () {
+    yield * [1,2,3]
+}
+
+for(let n of fn()){
+    console.log(n); //1 2 3
+}
+
+```
+
+* yield * 的值（不是指这个表达式）是关联迭代器返回 done:true 时的 value 属性。
+```js
+function * g1(){
+    yield 1;
+}
+
+function * g2 (){
+    yield 2;
+    return 'return 3';
+}
+
+function * fn(){
+    const a = yield * [1,2,3]; // a 的值为 undefined，因为 [1,2,3] 最终 迭代 done:true 时 value 为 undefined
+    const b = yield * g1(); // b 的值也为 undefined
+    const c = yield * g2(); // c 的值为 "return 3"
+    console.log(a,b,c)
+}
+
+const f = fn();
+
+//打印顺序为 1 2 3 1 2 "undefined,undefined,return 3"
+//"undefined,undefined,return 3"最后打印是因为 yield 会让生成器停止执行。所有 yield 执行完毕之后才会执行 console.log(a,b,c)
+for(let n of f){
+    console.log(n)
+}
+```
+
+* yield * 递归
+```js
+function * G(count){
+    if(count>0){
+        yield * G(count-1);
+        yield count-1
+    }
+}
+
+const g = G(3);
+
+for(let n of g){
+    console.log(n); // 0 1 2
+}
+
+/**
+ * G(3) -> yield G(2); yield 2;
+ *         yield G(1); yield 1;
+ *         yield G(0); yield 0;
+ * G(3) -> yield 0; yield 1; yield 2;
+*/
+```
+
+* 生成器可以作为默认迭代器
+```js
+const counts = {
+    *[Symbol.iterator](){
+        yield * [1,2,3]
+    }
+}
+
+for(let c of counts){
+    console.log(c)// 1 2 3
+}
+```
+
+* 可以通过生成器对象的 return() 方法提前结束生成器的迭代。
+```js
+function * G(){
+    yield * [1,2,3]
+}
+
+const g = G();
+
+console.log(g.next()); // {done:false,value:1}
+console.log(g.return(0)); // {done:true,value:0}
+console.log(g.next()); // {done:true,value:undefined}
+```
+
+* throw() 方法会在暂停的时候将一个提供的错误注入到生成器对象中，如果错误没有被处理，生成器就会关闭，如果生成器内部处理了错误，生成器不会被关闭，还可以恢复执行，错误处理会跳过对应的 yield。
+```js
+function * G () {
+    for(let n of [1,2,3]){
+        try {
+            yield n;
+        } catch(e) {
+
+        }
+    }
+}
+
+const g = G();
+
+console.log(g.next()); //{done:false,value:1}
+console.log(g.throw("error")); //{done:false,value:2}
+console.log(g.next()); //{done:false,value:3}
+```
+
+

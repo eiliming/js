@@ -797,4 +797,346 @@ console.log(g.throw("error")); //{done:false,value:2}
 console.log(g.next()); //{done:false,value:3}
 ```
 
+---
+## **属性描述对象**
+---
+* 用于描述对象属性的对象，默认所有值都为 true，若执行了设定，则所有未设定的值默认 false。
+* configurable，表示属性是否可以通过 delete 删除并重新定义，是否可以修改他的特性，以及是否可以吧它改为访问器属性（set get）。
+* enumerable，表示属性是否可以通过 for-in 循环返回（Symbol 的key 始终不会被返回）。
+* writable，表示属性的值是否可以被修改。
+* value，表示属性的值。
+* get()，读取函数。
+* set()，设置函数。
+* 可以通过 Object.defineProperty() Object.defineProperties() 方法修改对象的属性描述对象。
+* 可以通过 Object.getOwnPropertyDescriptor() Object.getOwnPropertyDescriptors() 查询对象的属性描述对象。
+```js
+const obj = {};
 
+//未设置 configurable、enumerable 默认为 false
+Object.defineProperty(obj,"a",{
+    writable:false, // obj.a 不可以被编辑
+    value:"a" //obj.a = "a"
+});
+
+obj.a = "b";
+
+console.log(obj.a); // "a"
+
+//下面代码会报错
+// Object.defineProperty(obj,"a",{
+//     configurable:true, // configurable 设置成 false 之后便不可以再调整了
+// })
+
+const obj2 = {};
+
+Object.defineProperties(obj2,{
+    a:{
+        get(){
+            return "a"
+        },
+        set(prop){
+            console.log(prop)
+        }
+    }
+})
+
+console.log(obj2.a); //"a"
+
+obj2.a = "b"; // "b"
+
+console.log(obj2.a); //"a"
+
+//等同于上面
+const obj3 = {
+    get a (){
+        return "a"
+    },
+    set a (prop){
+        console.log(prop)
+    }
+}
+
+```
+
+---
+## **创建对象**
+---
+### **工厂模式**
+```js
+function createObj(name,age){
+    return {
+        name,
+        age,
+        getName(){
+            return name
+        }
+    }
+}
+```
+
+### **构造函数模式 new 执行过程**
+* 创建一个对象
+* 将该对象的原型（__proto__）指向构造函数的原型对象（prototype）。
+* 将构造函数的 this 赋值给该对象。
+* 执行构造函数（给对象添加属性和方法）。
+* 返回对象（构造函数不能使用 return 返回值）。
+```js
+function P (name,age) {
+    this.name = name;
+    this.age = age;
+    this.getName = function(){
+        return this.name;
+    }
+}
+
+const p = new P("name",22);
+
+console.log(p instanceof P); //true
+
+console.log(p.getName()); // name
+
+//const b =new P() 等价于 const b = new P;
+```
+* 构造函数模式的问题是每一个实例都会重复实例方法。
+
+### **原型模式**
+* 每个函数都有一个原型对象(通过 .prototype 访问)。
+* 每个默认原型对象都包含 constructor 属性，指向函数自身。
+```js
+function fn (){}
+console.log(fn.prototype.constructor === fn); //true
+```
+* 每个实例对象都可以通过 .\_\_proto__ 访问到该实例的构造函数的原型对象。
+```js
+function P (){}
+const p = new P;
+console.log(p.__proto__===P.prototype); //true
+```
+* 实例对象可以通过原型继承它的构造函数的原型对象上的属性和方法。
+* 原型对象本省也可以是某个构造函数的实例（因此可以构成原型链）。
+* 原型链最顶部始终是 Object 构造函数的原型对象，Object 构造函数的原型对象的构造函数的原型对象是 null。
+```js
+function P (){}
+const p = new P;
+console.log(p.__proto__.__proto__===Object.prototype); //true
+console.log(Object.prototype.__proto__ === null); //true
+```
+* .isPrototypeOf() 可以检测某个对象是否是某个构造函数的实例。
+```js
+function P (){}
+const p = new P;
+P.prototype.isPrototypeOf(p); //true
+```
+
+* Object.getPrototypeOf() 获取实例链接的原型对象（等同于 .\_\_proto__ 属性）。
+```js
+function P (){};
+const p = new P;
+console.log(Object.getPrototypeOf(p)===p.__proto__); //true
+```
+
+* Object.create() 可以创建一个制定原型对象的对象。
+```js
+const protoObj = {};
+const obj = Object.create(protoObj);
+console.log(obj.__proto__===protoObj); //true
+```
+
+* .hansOwnProperty() 可以判断某个属性是不是实例本身的属性。
+
+* for-in 会遍历实例对象本身以及原型链上的可遍历属性。
+```js
+function P (){
+    this.name="name"
+}
+
+P.prototype.age = 12;
+
+const p = new P;
+
+for(let k in p){
+    console.log(k); //name age
+}
+```
+
+* Object.keys() Object.values() Object.entries() 只会处理实例自身的可遍历属性（不包含 Symbol key）。
+
+* Object.getOwnPropertyNames() Object.getOwnPropertySymbols() Object.getOwnPropertyDescriptors() 可以获取所有相关实例属性（非原型链上的）。
+
+* 自定义原型对象。
+```js
+function P(){}
+
+P.prototype = {
+    name:"name",
+    age:12,
+    sayName(){
+        console.log(this.name)
+    }
+}
+
+// 注意 constructor 的指向以及是否可遍历
+Object.defineProperty(P.prototype,"constructor",{
+    enumerable:false,
+    value:P
+})
+```
+
+---
+## **继承**
+---
+### **原型链**
+* 原型链上的引用值会在所有实例中共享，一旦被修改会影响所有实例。
+* 字类无法给父类传参。
+```js
+function SP(){
+    this.sp = "sp"
+}
+
+SP.prototype.getValue = function(){
+    return this.sp
+}
+
+function P(){
+    this.p="p"
+}
+
+//继承 SP 的属性和方法在原型上
+P.prototype = new SP();
+
+P.prototype.getSpp = function(){
+    return this.p+this.sp;
+}
+
+const p = new P();
+
+console.log(p.getSpp()); // psp
+```
+
+### **盗用构造函数**
+* 在子类内部调用父类的构造函数，并且可以传递参数
+* 缺少原型能力
+```js
+function SP(sp){
+    this.sp = sp;
+    this.getValue = function(){
+        return this.sp
+    }
+}
+
+function P(p,sp){
+    //继承 SP 的属性，并可以传递参数。
+    SP.call(this,sp);
+    this.p=p;
+    this.getSpp = function(){
+        return this.p+this.sp;
+    }
+}
+const p = new P("p","sp");
+
+console.log(p.getSpp()); // psp
+```
+
+### **寄生组合继承**
+* 最佳模式
+```js
+function SP(sp){
+    this.sp = sp
+}
+
+SP.prototype.getValue = function(){
+    return this.sp
+}
+
+function P(p,sp){
+    //继承 SP 的属性，并可以传递参数。
+    SP.call(this,sp)
+    this.p=p
+}
+
+//从新制定原型对象（来源于父类的原型对象）
+const clonePrototype = Object.create(SP.prototype);
+Object.defineProperty(clonePrototype,"constructor",{
+    value:P,
+    enumerable:false
+})
+P.prototype = clonePrototype;
+
+
+P.prototype.getSpp = function(){
+    return this.p+this.sp;
+}
+
+const p = new P('p','sp');
+
+console.log(p.getSpp()); // psp
+```
+---
+## **类**
+---
+### **实例属性与原型方法**
+* 定义在 this 上的属性都是实例属性。
+* 定义在类块中的方法会作为原型方法（static 方法除外，他不会被实例拥有）。
+```js
+class Person {
+    constructor(){
+        //实例属性
+        this.name = "name";
+        this.age = 22;
+        //实例方法
+        this.getAge = function(){
+            return this.age
+        };
+    }
+    //原型上的方法
+    getName(){
+        console.log(this.name)
+    };
+
+    static showName(){
+        console.log(this.name)
+    }
+}
+
+const p = new Person();
+
+Person.showName()
+```
+
+### **super() new.target extends**
+* super 只能在子类（派生类）中使用。
+* 在构造函数中使用调用父类的构造函数，并将返回的实例赋值给 this。
+* 在 static 静态方法中可以通过 super 调用父类的静态方法。
+* 如果没有定义构造函数，在实例子类时会调用 super 并将所有参数传递进去。
+* 在构造函数中不能在 super 之前使用 this。
+* 子类定义了构造函数则必须调用 super。
+* 可以在构造函数中使用 new.target 获取当前 new
+的是哪一个类。
+* 可以在父类中调用子类的方法（原型上，非属性）。
+```js
+class Person{
+    constructor(){
+        console.log(new.target);
+        if(new.target === Person){
+            console.log('Person 只能作为父类使用')
+        }else{
+            console.log('Pre:',this.getValue()); //获取子类的方法（原型上的方法）
+        }
+    }
+}
+
+const p = new Person();// 此时的 new.target 是 Person 类
+
+class Per extends Person {
+    constructor(){
+        super();
+    }
+    getValue(){
+        return "per"
+    }
+}
+
+const p1 = new Per();//此时的n ew.target 是 Per类
+```
+
+* extends 后面可以是一个表达式，因此可以使用表达式实现多个继承。
